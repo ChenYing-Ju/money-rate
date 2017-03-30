@@ -1,0 +1,206 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>nw-demo</title>
+	<script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.1.1.min.js"></script>
+  </head>
+  <body>
+		<p>選擇幣別：
+		<select id="select_currency">
+			<option value =0 >美金(USD)</option>
+			<option value =2 >港幣(HKD)</option>
+			<option value =4 >英鎊(GBP)</option>
+			<option value =6 >澳幣(AUD)</option>
+			<option value =8 >加拿大幣(CAD)</option>
+			<option value =10 >新加坡幣(SGD)</option>
+			<option value =12 >瑞士法郎(CHF)</option>
+			<option value =14 >日圓(JPY)</option>			
+		</select></p>		
+		<p>設定買賣上下限值：</p>
+		<p>本行買入金額
+			<select id="select_buy">
+				<option value =1 > > </option>
+				<option value =2 > >= </option>
+				<option value =3 > = </option>
+				<option value =4 > <= </option>
+				<option value =5 > < </option>
+			</select>
+			<input id="buy" width="20"></input>
+			元時，跳出提醒視窗</p>
+		<p>本行賣出金額
+			<select id="select_sell">
+				<option value =1 > > </option>
+				<option value =2 > >= </option>
+				<option value =3 > = </option>
+				<option value =4 > <= </option>
+				<option value =5 > < </option>
+			</select>
+			<input id="sell" width="20"></input>
+			元時，跳出提醒視窗</p>	
+		<button id="button_1" onclick="start()">Submit</button>
+    <script>
+	//---------nodejs宣告區---------
+		var request = require("request");
+		//var fs = require("fs");
+		var cheerio = require("cheerio");	 
+	  
+	//---------js變數宣告區---------
+		var cash_buy;//現金匯率買入金額
+		var cash_sell;//現金匯率賣出金額
+		var sight_buy;//即期匯率買入金額
+		var sight_sell;//即期匯率賣出金額
+		var currency ;//儲存幣別變數
+		var currency_text ;//儲存幣別名稱
+		var buy;//儲存買入金額
+		var sell;//儲存賣出金額
+		var select_buy;//儲存買入金額之比較
+		var select_buy_text;//儲存買入金額之比較
+		var select_sell;//儲存賣出金額之比較
+		var select_sell_text;//儲存賣出金額之比較
+	  
+	//---------function執行區---------
+	var start = function(){
+	
+		var x = document.getElementById("select_currency");
+		var y = document.getElementById("buy");
+		var z = document.getElementById("sell");
+		var w = document.getElementById("select_buy");
+		var s = document.getElementById("select_sell");
+		
+		currency = parseInt(x.value);
+		currency_text = x.options[x.selectedIndex].text;
+		
+		select_buy = parseInt(w.value);
+		select_buy_text = w.options[w.selectedIndex].text;
+		select_sell = parseInt(s.value);
+		select_sell_text = s.options[s.selectedIndex].text;
+			
+		if(y.value!=""){
+			buy = parseInt(y.value);
+		}else{buy =0;}
+				
+		if(z.value!=""){
+			sell = parseInt(z.value);
+		}else{sell =0;}
+		
+		
+		money();
+		setInterval(money,5*1000);//每隔5秒回傳一次	
+	};
+	
+	var money = function(){
+	      
+		  document.close();//清除頁面
+		  
+		  var n = new Date();
+		  var y = n.getFullYear();
+		  var m = (n.getMonth()+1< 10)?("0" + (n.getMonth() + 1)):(n.getMonth() + 1);
+		  var d = (n.getDate()< 10)?("0" + (n.getDate())):(n.getDate());
+		  var h = n.getHours();
+		  var mi = (n.getMinutes()< 10)?("0" + (n.getMinutes())):(n.getMinutes());
+		  var s = (n.getSeconds()< 10)?("0" + (n.getSeconds())):(n.getSeconds());
+		  var now = y+"-"+m+"-"+d+" "+h+":"+mi+":"+s;//取得現在日期時間
+		
+		  request({
+			url: "http://rate.bot.com.tw/Pages/Static/UIP003.zh-TW.htm",
+			method: "GET"
+		  }, function(error, response, body) {
+			if (error || !body) {
+			  return;
+			}else{
+				
+			// 爬完網頁後要做的事情				
+				var $ = cheerio.load(body);
+				var target1 = $(".rate-content-cash.text-right.print_hide");//現金匯率
+				var target2 = $(".rate-content-sight.text-right.print_hide");//即期匯率
+				cash_buy = target1[currency].children[0].data;
+				cash_sell = target1[currency+1].children[0].data;
+				sight_buy = target2[currency].children[0].data;
+				sight_sell = target2[currency+1].children[0].data;
+				
+				document.write("台灣銀行牌告匯率<br>");
+				document.write("現在時間："+now+"<br>");				
+				document.write(currency_text+"[現金匯率]<br>");
+				document.write("本行買入："+cash_buy+"<br>");	
+				document.write("本行賣出："+cash_sell+"<br>");
+				document.write("<br>");
+				document.write(currency_text+"[即期匯率]<br>");	
+				document.write("本行買入："+sight_buy+"<br>");	
+				document.write("本行賣出："+sight_sell+"<br>");	
+				if(buy!=0 && sell!=0){compare();}
+			}
+		  });
+	};
+	
+	var compare = function(){
+		switch(select_buy)//針對買入的比較...
+		{
+		case 1://">"
+			if(sight_buy > buy){			
+				alert("目前買入匯率為「"+sight_buy+"元」，已 > 您所設定的「"+buy+"元」！");
+			}
+		  break;
+		  
+		case 2://">="
+			if(sight_buy >= buy){			
+				alert("目前買入匯率為「"+sight_buy+"元」，已 >= 您所設定的「"+buy+"元」！");
+			} 
+		  break;
+		  
+		case 3://"="
+			if(sight_buy = buy){			
+				alert("目前買入匯率為「"+sight_buy+"元」，已 = 您所設定的「"+buy+"元」！");
+			} 
+		  break;
+		  
+		case 4://"<="
+			if(sight_buy <= buy){			
+				alert("目前買入匯率為「"+sight_buy+"元」，已 <= 您所設定的「"+buy+"元」！");
+			}  
+		  break;
+		  
+		case 5://"<"
+			if(sight_buy < buy){			
+				alert("目前買入匯率為「"+sight_buy+"元」，已 < 您所設定的「"+buy+"元」！");
+			} 
+		  break;
+		}
+		
+		switch(select_sell)//針對賣出的比較...
+		{
+		case 1://">"
+			if(sight_sell > sell){			
+				alert("目前賣出匯率為「"+sight_sell+"元」，已 > 您所設定的「"+sell+"元」！");
+			}
+		  break;
+		  
+		case 2://">="
+			if(sight_sell >= sell){			
+				alert("目前賣出匯率為「"+sight_sell+"元」，已 >= 您所設定的「"+sell+"元」！");
+			} 
+		  break;
+		  
+		case 3://"="
+			if(sight_sell = sell){			
+				alert("目前賣出匯率為「"+sight_sell+"元」，已 = 您所設定的「"+sell+"元」！");
+			} 
+		  break;
+		  
+		case 4://"<="
+			if(sight_sell <= sell){			
+				alert("目前賣出匯率為「"+sight_sell+"元」，已 <= 您所設定的「"+sell+"元」！");
+			}  
+		  break;
+		  
+		case 5://"<"
+			if(sight_sell < sell){			
+				alert("目前賣出匯率為「"+sight_sell+"元」，已 < 您所設定的「"+sell+"元」！");
+			} 
+		  break;
+		}				
+		  
+	};
+
+	</script>
+  </body>
+</html>
