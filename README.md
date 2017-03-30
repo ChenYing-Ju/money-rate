@@ -6,4 +6,4 @@
 ##### 程式碼完成後，也可以透過指令將檔案打包成.exe，但必須含在nw.js的資料夾下執行，方法如下：
  1. 打開cmd
  2. 使用cd指令，找到該文件的目錄下
- 3. 輸入 copy /b nw.exe + x.zip y.exe  (x:打包的.zip檔名 y:.exe將要命名之檔名)
+ 3. 輸入 copy /b nw.exe + x.zip y.exe  (x:打包的.zip檔名 y:將要命名.exe檔名)
